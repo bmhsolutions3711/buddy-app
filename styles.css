@@ -247,9 +247,12 @@ body[data-mode="counsel"] { --warm: #8fb0d8; }
 
 .armrest {
   z-index: 3;
-  display: flex; align-items: center; gap: 10px;
+  display: flex; flex-direction: column; gap: 8px;
   padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
 }
+.arm-row { display: flex; align-items: center; gap: 10px; }
+.gears { display: flex; gap: 6px; justify-content: center; }
+.gears .act { flex: 1; max-width: 140px; }
 .hold {
   flex: 1;
   height: 88px;

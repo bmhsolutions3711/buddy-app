@@ -33,7 +33,7 @@
     <div class="who">
       <span class="pip" id="pip" data-on="0"></span>
       <span class="name">Buddy</span>
-      <button type="button" class="ver" id="ver" title="Tap to pull an update">v17</button>
+      <button type="button" class="ver" id="ver" title="Tap to pull an update">v18</button>
       <span class="why" id="why">…</span>
     </div>
     <div class="rail-end">
@@ -46,9 +46,6 @@
     <div class="tools">
       <button type="button" class="act web" id="webBtn" data-on="0">Web</button>
       <button type="button" class="act" id="modeBtn" data-on="0">Counsel</button>
-      <button type="button" class="act gear" id="talkGear" data-gear="talk" data-on="1">Talk</button>
-      <button type="button" class="act gear" id="thinkGear" data-gear="think" data-on="0">Think</button>
-      <button type="button" class="act gear" id="deepGear" data-gear="deep" data-on="0">Deep</button>
     </div>
 
   <section class="sheet" id="chats" hidden>
@@ -78,10 +75,17 @@
   </form>
 
   <footer class="armrest">
-    <button type="button" class="hold" id="hold" aria-label="Talk">
-      <span id="holdLabel">Talk</span>
-    </button>
-    <button type="button" class="act ghost" id="typeToggle">Type</button>
+    <div class="arm-row">
+      <button type="button" class="hold" id="hold" aria-label="Talk">
+        <span id="holdLabel">Talk</span>
+      </button>
+      <button type="button" class="act ghost" id="typeToggle">Type</button>
+    </div>
+    <div class="gears">
+      <button type="button" class="act gear" id="talkGear" data-gear="talk" data-on="1">Chat</button>
+      <button type="button" class="act gear" id="thinkGear" data-gear="think" data-on="0">Think</button>
+      <button type="button" class="act gear" id="deepGear" data-gear="deep" data-on="0">Deep</button>
+    </div>
   </footer>
 
   <section class="sheet" id="installSheet" hidden>
