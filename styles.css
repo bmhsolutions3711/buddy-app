@@ -263,30 +263,35 @@ body[data-mode="counsel"] { --warm: #8fb0d8; }
 .gears { display: flex; gap: 6px; justify-content: center; }
 .gears .act { flex: 1; max-width: 140px; }
 .hold {
-  flex: 1;
-  height: 88px;
-  border-radius: 999px;
+  flex: 0 0 56px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
   border: 1px solid color-mix(in oklab, var(--steel) 45%, #2a3648);
   background:
     linear-gradient(180deg, color-mix(in oklab, #1a2230 80%, transparent), #0c1018);
   color: var(--ink);
-  font: inherit; font-size: 1.15rem; font-weight: 650; letter-spacing: 0.08em;
-  text-transform: uppercase;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
-  touch-action: none;
+  display: grid; place-items: center;
+  padding: 0;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  touch-action: manipulation;
   user-select: none;
 }
+.hold .ico { width: 22px; height: 22px; display: block; }
+.hold .stop { display: none; }
 .hold.hot {
   background: var(--gate); color: #fff; border-color: transparent;
 }
+.hold.hot .mic { display: none; }
+.hold.hot .stop { display: block; }
 body[data-state="talking"] .hold { border-color: color-mix(in oklab, var(--warm) 50%, transparent); }
 .composer {
-  display: flex; gap: 8px; padding: 0 16px 8px; z-index: 3;
+  display: flex; flex: 1; min-width: 0; gap: 0; padding: 0; z-index: 3;
 }
-.composer textarea {
-  flex: 1; min-height: 56px; resize: none;
-  border-radius: 14px; border: 1px solid #2a3648;
-  background: #0b0f16; color: var(--ink); font: inherit; padding: 12px 14px;
+.composer input {
+  width: 100%; height: 56px;
+  border-radius: 999px; border: 1px solid #2a3648;
+  background: #0b0f16; color: var(--ink); font: inherit;
+  padding: 0 18px;
 }
 
 .err { color: var(--gate); font-size: 0.9rem; }

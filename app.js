@@ -97,7 +97,7 @@
     document.body.dataset.state = s;
     const why = $("why");
     const pip = $("pip");
-    const hold = $("holdLabel");
+    const hold = $("hold");
     const map = {
       boot: ["waking", "0", "Talk"],
       connect: ["paste the token", "dark", "Talk"],
@@ -112,7 +112,7 @@
     const row = map[s] || map.idle;
     why.textContent = row[0];
     pip.dataset.on = row[1];
-    hold.textContent = row[2];
+    if (hold) hold.setAttribute("aria-label", row[2]);
     if (status && status.mode === "counsel") document.body.dataset.mode = "counsel";
     else document.body.dataset.mode = "talk";
   }
@@ -758,12 +758,6 @@
         body: JSON.stringify({ hand: "bryan" }),
       }));
     } catch (e) { showErr(e.message); }
-  });
-
-  $("typeToggle").addEventListener("click", () => {
-    const form = $("typeForm");
-    form.hidden = !form.hidden;
-    if (!form.hidden) $("typeIn").focus();
   });
 
   $("typeForm").addEventListener("submit", async (e) => {

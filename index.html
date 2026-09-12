@@ -33,7 +33,7 @@
     <div class="who">
       <span class="pip" id="pip" data-on="0"></span>
       <span class="name">Buddy</span>
-      <button type="button" class="ver" id="ver" title="Tap to pull an update">v19</button>
+      <button type="button" class="ver" id="ver" title="Tap to pull an update">v20</button>
       <span class="why" id="why">…</span>
     </div>
     <div class="rail-end">
@@ -69,18 +69,20 @@
     <p class="pipms" id="pipms" hidden></p>
   </main>
 
-  <form class="composer" id="typeForm" hidden autocomplete="off">
-    <label class="sr" for="typeIn">Say something</label>
-    <textarea id="typeIn" rows="2" maxlength="4000" placeholder="Type it"></textarea>
-    <button type="submit" class="act primary">Send</button>
-  </form>
-
   <footer class="armrest">
     <div class="arm-row">
+      <form class="composer" id="typeForm" autocomplete="off">
+        <label class="sr" for="typeIn">Say something</label>
+        <input id="typeIn" type="text" maxlength="4000" placeholder="Type it" enterkeyhint="send" />
+      </form>
       <button type="button" class="hold" id="hold" aria-label="Talk">
-        <span id="holdLabel">Talk</span>
+        <svg class="ico mic" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/>
+        </svg>
+        <svg class="ico stop" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+        </svg>
       </button>
-      <button type="button" class="act ghost" id="typeToggle">Type</button>
     </div>
     <div class="gears">
       <button type="button" class="act gear" id="talkGear" data-gear="talk" data-on="1">Chat</button>
