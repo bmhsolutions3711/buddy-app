@@ -3,18 +3,41 @@
   "name": "Buddy",
   "short_name": "Buddy",
   "description": "Passenger seat. Local. Book on the Pro.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/buddy-app/",
+  "scope": "/buddy-app/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "prefer_related_applications": false,
   "orientation": "any",
   "background_color": "#05070b",
   "theme_color": "#05070b",
   "icons": [
-    { "src": "icon-buddy-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-buddy-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-buddy-mask-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icon-buddy-mask-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-buddy-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-buddy-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-buddy-mask-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-buddy-mask-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
