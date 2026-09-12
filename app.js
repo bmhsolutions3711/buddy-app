@@ -423,64 +423,103 @@
     return types.find((t) => MediaRecorder.isTypeSupported(t)) || "";
   }
 
-  function warmAudio() {
-    if (!audioCtx || audioCtx.state === "closed") {
-      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return; }
-    }
-    if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
-  }
-  document.addEventListener("pointerdown", warmAudio, { capture: true });
+  const BT_NAME = /bluetooth|headset|headphone|earbuds|buds|airpods|hands-?free|communication|le-audio|wh-|galaxy buds/i;
+  const SILENCE = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
-  function pokeHeadphones() {
-    try {
-      const a = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
-      a.volume = 0.02;
-      if (outSink && a.setSinkId) a.setSinkId(outSink).catch(() => {});
-      a.play().catch(() => {});
-    } catch (_) { /* gesture still counts */ }
+  function isBt(label) {
+    return BT_NAME.test(label || "");
   }
 
-  function openMic() {
+  function until(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  function micAudio(deviceId, exact) {
     const base = {
       echoCancellation: true,
       noiseSuppression: true,
       autoGainControl: true,
       channelCount: 1,
     };
-    const prefer = localStorage.getItem(MIC_KEY) || "";
-    const audio = prefer ? { ...base, deviceId: { ideal: prefer } } : base;
-    return navigator.mediaDevices.getUserMedia({ audio });
+    if (!deviceId) return base;
+    return { ...base, deviceId: exact ? { exact: deviceId } : { ideal: deviceId } };
   }
 
-  function rememberDevices(stream) {
-    const btName = /bluetooth|headset|headphone|earbuds|buds|airpods|hands-?free|communication|le-audio|wh-|galaxy buds/i;
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      const inputs = devices.filter((d) => d.kind === "audioinput");
-      const btIn = inputs.find((d) => btName.test(d.label || ""));
+  async function gum(deviceId, exact) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: micAudio(deviceId, exact) });
+    } catch (err) {
+      if (deviceId && exact) {
+        try { return await navigator.mediaDevices.getUserMedia({ audio: micAudio(deviceId, false) }); } catch (_) {}
+      }
+      if (deviceId) return navigator.mediaDevices.getUserMedia({ audio: micAudio("", false) });
+      throw err;
+    }
+  }
+
+  async function pokeHeadphones() {
+    try {
+      const a = new Audio(SILENCE);
+      a.volume = 0.02;
+      if (outSink && a.setSinkId) {
+        try { await Promise.race([a.setSinkId(outSink), until(200)]); } catch (_) {}
+      }
+      await Promise.race([a.play().catch(() => {}), until(600)]);
+    } catch (_) { /* gesture still counts */ }
+  }
+
+  async function pickBt(stream) {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const btIn = devices.find((d) => d.kind === "audioinput" && isBt(d.label));
+      const btOut = devices.find((d) => d.kind === "audiooutput" && isBt(d.label));
+      if (btOut) {
+        outSink = btOut.deviceId;
+        localStorage.setItem(SINK_KEY, outSink);
+      }
       const cur = stream && stream.getAudioTracks()[0];
-      const curId = cur && cur.getSettings ? cur.getSettings().deviceId : "";
+      const curLabel = (cur && cur.label) || "";
       if (btIn) localStorage.setItem(MIC_KEY, btIn.deviceId);
-      else if (curId) localStorage.setItem(MIC_KEY, curId);
-      const outs = devices.filter((d) => d.kind === "audiooutput");
-      const btOut = outs.find((d) => btName.test(d.label || ""));
-      outSink = btOut ? btOut.deviceId : "";
-      if (outSink) localStorage.setItem(SINK_KEY, outSink);
-      else localStorage.removeItem(SINK_KEY);
-    }).catch(() => {});
+      else if (isBt(curLabel) && cur && cur.getSettings) {
+        const id = cur.getSettings().deviceId;
+        if (id) localStorage.setItem(MIC_KEY, id);
+      }
+      if (btIn && !isBt(curLabel)) {
+        stream.getTracks().forEach((t) => t.stop());
+        return await gum(btIn.deviceId, true);
+      }
+      return stream;
+    } catch (_) {
+      return stream;
+    }
+  }
+
+  async function openMic() {
+    await pokeHeadphones();
+    const prefer = localStorage.getItem(MIC_KEY) || "";
+    let stream = await gum(prefer, !!prefer);
+    return pickBt(stream);
   }
 
   async function wireVad(stream) {
-    warmAudio();
-    if (!audioCtx) return;
+    if (audioCtx && audioCtx.state !== "closed") {
+      try { await audioCtx.close(); } catch (_) {}
+      audioCtx = null;
+      analyser = null;
+      micSrc = null;
+    }
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (_) {
+      return;
+    }
+    if (outSink && audioCtx.setSinkId) {
+      try { await audioCtx.setSinkId(outSink); } catch (_) {}
+    }
     if (audioCtx.state === "suspended") await audioCtx.resume();
-    if (micSrc) {
-      try { micSrc.disconnect(); } catch (_) {}
-    }
     micSrc = audioCtx.createMediaStreamSource(stream);
-    if (!analyser) {
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-    }
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
     micSrc.connect(analyser);
   }
 
@@ -626,14 +665,11 @@
     micStarting = true;
     $("hold").classList.add("hot");
     setState("listening");
-    warmAudio();
-    pokeHeadphones();
     try {
       liveStream = await openMic();
       sessionOn = true;
       firstTurn = true;
       armTurn();
-      rememberDevices(liveStream);
       wireVad(liveStream).catch(() => {});
     } catch (err) {
       sessionOn = false;
@@ -661,6 +697,11 @@
       liveStream.getTracks().forEach((t) => t.stop());
       liveStream = null;
     }
+    if (audioCtx) {
+      try { audioCtx.close(); } catch (_) {}
+      audioCtx = null;
+    }
+    analyser = null;
     $("hold").classList.remove("hot");
     if (state !== "dark" && state !== "off" && state !== "connect") setState("idle");
   }
