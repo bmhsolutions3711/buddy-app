@@ -488,45 +488,45 @@
     } catch (_) { /* gesture still counts */ }
   }
 
-  async function pickBt(stream) {
+  async function rememberSink() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
-      const btIn = findBtInput(devices);
       const btOut = devices.find((d) => d.kind === "audiooutput" && isBt(d.label));
       if (btOut) {
         outSink = btOut.deviceId;
         localStorage.setItem(SINK_KEY, outSink);
       }
-      const cur = stream && stream.getAudioTracks()[0];
-      const curLabel = (cur && cur.label) || "";
-      const curId = cur && cur.getSettings ? cur.getSettings().deviceId : "";
-      if (btIn) {
-        localStorage.setItem(MIC_KEY, btIn.deviceId);
-        if (btIn.deviceId !== curId) {
-          stream.getTracks().forEach((t) => t.stop());
-          return await gum(btIn.deviceId, true, true);
-        }
-      }
-      if (isBt(curLabel) && curId) localStorage.setItem(MIC_KEY, curId);
-      return stream;
+      return findBtInput(devices);
     } catch (_) {
-      return stream;
+      return null;
     }
   }
 
+  function trackId(stream) {
+    const cur = stream && stream.getAudioTracks()[0];
+    const id = cur && cur.getSettings ? cur.getSettings().deviceId : "";
+    const label = (cur && cur.label) || "";
+    return { cur, id, label };
+  }
+
   async function openMic() {
-    await pokeHeadphones();
-    let stream = await gum("", false, true);
-    await until(MOBILE ? 450 : 80);
-    stream = await pickBt(stream);
-    if (!isBt(((stream.getAudioTracks()[0] || {}).label || ""))) {
-      const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
-      const btIn = findBtInput(devices);
-      if (btIn) {
-        stream.getTracks().forEach((t) => t.stop());
-        stream = await gum(btIn.deviceId, true, true);
-      }
+    const prefer = localStorage.getItem(MIC_KEY) || "";
+    if (!prefer && !MOBILE) await pokeHeadphones();
+    let stream = await gum(prefer, !!prefer, true);
+    const first = trackId(stream);
+    if (isBt(first.label) && first.id) {
+      localStorage.setItem(MIC_KEY, first.id);
+      rememberSink();
+      return stream;
     }
+    await until(MOBILE ? 300 : 50);
+    const btIn = await rememberSink();
+    if (btIn && btIn.deviceId && btIn.deviceId !== first.id) {
+      stream.getTracks().forEach((t) => t.stop());
+      stream = await gum(btIn.deviceId, true, true);
+    }
+    const after = trackId(stream);
+    if (isBt(after.label) && after.id) localStorage.setItem(MIC_KEY, after.id);
     return stream;
   }
 
