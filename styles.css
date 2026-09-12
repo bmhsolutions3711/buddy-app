@@ -83,6 +83,7 @@ body {
 }
 .name { font-weight: 650; letter-spacing: -0.02em; }
 .why { color: var(--ink-mute); font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who .kill { margin-left: 2px; flex-shrink: 0; }
 .pip {
   width: 8px; height: 8px; border-radius: 50%;
   background: #3a4452; box-shadow: 0 0 0 3px color-mix(in oklab, #3a4452 30%, transparent);
