@@ -69,7 +69,7 @@
   }
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(() => {});
+    navigator.serviceWorker.register("sw.js", { scope: "./", updateViaCache: "none" }).catch(() => {});
     navigator.serviceWorker.addEventListener("message", (e) => {
       if (e.data && e.data.type === "VERSION") {
         const ver = $("ver");
@@ -86,20 +86,23 @@
     navigator.serviceWorker.addEventListener("controllerchange", () => setTimeout(askVersion, 300));
     const ver = $("ver");
     if (ver) {
-      ver.addEventListener("click", async () => {
+      ver.addEventListener("click", () => {
+        if (ver.dataset.pulling === "1") {
+          location.reload();
+          return;
+        }
+        ver.dataset.pulling = "1";
         ver.className = "ver checking";
         ver.textContent = "pulling";
-        try {
-          const r = await navigator.serviceWorker.getRegistration();
-          if (r) {
-            navigator.serviceWorker.addEventListener("controllerchange", () => location.reload(), { once: true });
-            await r.update();
-            if (r.waiting) r.waiting.postMessage({ type: "SKIP_WAITING" });
-            setTimeout(() => location.reload(), 3000);
-            return;
-          }
-        } catch (_) { /* reload anyway */ }
-        location.reload();
+        const go = () => location.reload();
+        navigator.serviceWorker.addEventListener("controllerchange", go, { once: true });
+        setTimeout(go, 1200);
+        navigator.serviceWorker.getRegistration().then((r) => {
+          if (!r) return;
+          const skip = () => { if (r.waiting) r.waiting.postMessage({ type: "SKIP_WAITING" }); };
+          r.update().then(skip).catch(() => {});
+          skip();
+        }).catch(() => {});
       });
     }
   }
