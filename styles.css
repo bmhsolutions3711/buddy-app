@@ -145,6 +145,15 @@ body {
   color: #d4efff;
   border-color: #5ec8ff;
 }
+.act.plan {
+  border-color: color-mix(in oklab, #ff8a4c 50%, #2a3648);
+  color: #ffb088;
+}
+.act.plan[data-on="1"] {
+  background: #3a2218;
+  color: #ffd0b8;
+  border-color: #ff8a4c;
+}
 .act.gear[data-on="1"] {
   background: var(--paint);
   color: #1a1400;

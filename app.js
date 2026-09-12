@@ -169,6 +169,7 @@
     status = s;
     $("webBtn").dataset.on = s.web ? "1" : "0";
     $("modeBtn").dataset.on = s.mode === "counsel" ? "1" : "0";
+    $("planBtn").dataset.on = s.mode === "gameplan" ? "1" : "0";
     $("talkGear").dataset.on = s.gear === "talk" ? "1" : "0";
     $("thinkGear").dataset.on = s.gear === "think" ? "1" : "0";
     $("deepGear").dataset.on = s.gear === "deep" ? "1" : "0";
@@ -650,14 +651,19 @@
     }
   });
 
-  $("modeBtn").addEventListener("click", async () => {
-    const on = $("modeBtn").dataset.on === "1";
+  async function setMode(mode) {
     try {
       paintStatus(await api("/api/talk/mode", {
         method: "POST",
-        body: JSON.stringify({ mode: on ? "talk" : "counsel", hand: "bryan" }),
+        body: JSON.stringify({ mode, hand: "bryan" }),
       }));
     } catch (e) { showErr(e.message); }
+  }
+  $("modeBtn").addEventListener("click", () => {
+    setMode($("modeBtn").dataset.on === "1" ? "talk" : "counsel");
+  });
+  $("planBtn").addEventListener("click", () => {
+    setMode($("planBtn").dataset.on === "1" ? "talk" : "gameplan");
   });
 
   async function setGear(gear) {
