@@ -113,7 +113,7 @@
     const map = {
       boot: ["waking", "0", "Talk"],
       connect: ["paste the token", "dark", "Talk"],
-      dark: ["Pro is dark", "dark", "Talk"],
+      dark: ["Pro unreachable", "dark", "Talk"],
       off: ["off", "0", "Off"],
       idle: ["ready", "1", "Talk"],
       listening: ["listening", "1", "Stop"],
@@ -127,6 +127,22 @@
     if (hold) hold.setAttribute("aria-label", row[2]);
     if (status && status.mode === "counsel") document.body.dataset.mode = "counsel";
     else document.body.dataset.mode = "talk";
+    if (s === "dark") watchPro();
+  }
+
+  let watchTimer = null;
+  function watchPro() {
+    if (watchTimer) return;
+    watchTimer = setInterval(async () => {
+      if (state !== "dark") {
+        clearInterval(watchTimer);
+        watchTimer = null;
+        return;
+      }
+      try {
+        await refresh();
+      } catch (_) { /* still dark */ }
+    }, 2000);
   }
 
   function showErr(msg) {
@@ -370,8 +386,19 @@
       });
     } catch (e) {
       if (e.name === "AbortError") return;
+      try {
+        const h = await fetch(apiUrl("/api/health"), {
+          credentials: creds(),
+          headers: headers(false),
+        }).then((r) => r.json());
+        if (h && h.ok) {
+          showErr(e.message === "Failed to fetch" ? "cut off — still here" : (e.message || "cut off"));
+          setState("idle");
+          return;
+        }
+      } catch (_) { /* really unreachable */ }
       setState("dark");
-      showErr(e.message === "Failed to fetch" ? "Pro unreachable — Tailscale off?" : (e.message || "dark"));
+      showErr("Pro unreachable — Tailscale off?");
       return;
     }
     if (res.status === 401) {
@@ -977,6 +1004,9 @@
     onHold(e);
   });
   hold.addEventListener("click", onHold);
+  $("why").addEventListener("click", () => {
+    if (state === "dark") refresh().catch(() => {});
+  });
 
   async function boot() {
     const offered = new URLSearchParams(location.search).get("token");

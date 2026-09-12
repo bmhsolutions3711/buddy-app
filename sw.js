@@ -1,5 +1,5 @@
 /* Buddy shell. Never cache /api/. Tap the version pill to pull a new build. */
-const VERSION = "buddy-shell-v27";
+const VERSION = "buddy-shell-v28";
 
 self.addEventListener("message", (e) => {
   if (e.data && e.data.type === "VERSION") {
