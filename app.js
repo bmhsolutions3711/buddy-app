@@ -145,11 +145,22 @@
   }
 
   async function api(path, opt) {
-    const res = await fetch(apiUrl(path), {
+    const once = () => fetch(apiUrl(path), {
       credentials: creds(),
       ...opt,
       headers: { ...headers(opt && opt.body), ...(opt && opt.headers) },
     });
+    let res;
+    try {
+      res = await once();
+    } catch (e) {
+      if (e && e.name === "AbortError") throw e;
+      try {
+        res = await once();
+      } catch (e2) {
+        throw new Error("Pro unreachable — Tailscale off?");
+      }
+    }
     if (res.status === 401) {
       token = "";
       localStorage.removeItem(TOKEN_KEY);
@@ -360,7 +371,7 @@
     } catch (e) {
       if (e.name === "AbortError") return;
       setState("dark");
-      showErr(e.message || "dark");
+      showErr(e.message === "Failed to fetch" ? "Pro unreachable — Tailscale off?" : (e.message || "dark"));
       return;
     }
     if (res.status === 401) {
@@ -627,9 +638,8 @@
     });
   }
 
-  function armTurn() {
+  function startRecorder() {
     if (!sessionOn || !liveStream) return;
-    stopVad();
     if (rec && rec.state === "recording") return;
     const mime = recMime();
     chunks = [];
@@ -644,31 +654,47 @@
     $("hold").classList.add("hot");
     const mic = ((liveStream.getAudioTracks()[0] || {}).label || "").trim();
     if (mic) $("why").textContent = "listening · " + mic.slice(0, 42);
+  }
 
-    const trail = 3800;
+  function startVad() {
+    stopVad();
+    const trail = firstTurn ? 1400 : 2200;
+    const needVoice = firstTurn ? 240 : 400;
+    const armedAt = performance.now();
     let heard = false;
     let lastVoice = 0;
     let voicedMs = 0;
     const samples = [];
     vadTimer = setInterval(() => {
       if (!sessionOn || turnBusy) return;
+      if (!analyser) return;
       const lvl = rms();
+      if (lvl === 0 && samples.length === 0) return;
       if (samples.length < 8) {
         samples.push(lvl);
         return;
       }
-      const floor = samples.slice().sort((a, b) => a - b)[Math.floor(samples.length / 2)] || 0.02;
-      const gate = Math.max(0.028, floor * 2.4);
+      const floor = samples.slice().sort((a, b) => a - b)[Math.floor(samples.length / 2)] || 0.01;
+      const gate = Math.max(0.012, floor * 1.8);
       const now = performance.now();
       if (lvl > gate) {
         heard = true;
         lastVoice = now;
         voicedMs += 80;
       }
-      if (heard && voicedMs >= 600 && now - lastVoice > trail) {
+      if (heard && voicedMs >= needVoice && now - lastVoice > trail) {
+        finishTurn();
+      } else if (heard && now - armedAt > 14000) {
+        finishTurn();
+      } else if (now - armedAt > 22000) {
         finishTurn();
       }
     }, 80);
+  }
+
+  function armTurn() {
+    startRecorder();
+    startVad();
   }
 
   async function finishTurn() {
@@ -698,8 +724,9 @@
       liveStream = await openMic();
       sessionOn = true;
       firstTurn = true;
-      armTurn();
-      wireVad(liveStream).catch(() => {});
+      startRecorder();
+      await wireVad(liveStream);
+      startVad();
     } catch (err) {
       sessionOn = false;
       $("hold").classList.remove("hot");
