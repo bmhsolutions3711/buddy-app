@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Buddy" />
+  <title>Buddy</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-buddy-192.png" type="image/png" />
+  <link rel="apple-touch-icon" href="icon-buddy-180.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-state="boot">
+  <div class="grain" aria-hidden="true"></div>
+
+  <section class="connect" id="connect" hidden>
+    <p class="kicker">Passenger seat</p>
+    <h1>Buddy</h1>
+    <p class="lead">Scan the QR on the Pro. Or paste the token once.</p>
+    <form id="connectForm" autocomplete="off">
+      <label class="sr" for="tokenIn">Token</label>
+      <input id="tokenIn" type="password" enterkeyhint="go" autocapitalize="off" autocomplete="off" spellcheck="false" />
+      <button type="submit" class="act primary">Sit down</button>
+    </form>
+    <p class="err" id="connectErr" hidden></p>
+  </section>
+
+  <header class="rail">
+    <div class="who">
+      <span class="pip" id="pip" data-on="0"></span>
+      <span class="name">Buddy</span>
+      <button type="button" class="ver" id="ver" title="Tap to pull an update">v17</button>
+      <span class="why" id="why">…</span>
+    </div>
+    <div class="rail-end">
+      <button type="button" class="burger" id="menuBtn" aria-label="Talks">
+        <i></i><i></i><i></i>
+      </button>
+      <button type="button" class="kill" id="armBtn" data-on="1">Off</button>
+    </div>
+  </header>
+    <div class="tools">
+      <button type="button" class="act web" id="webBtn" data-on="0">Web</button>
+      <button type="button" class="act" id="modeBtn" data-on="0">Counsel</button>
+      <button type="button" class="act gear" id="talkGear" data-gear="talk" data-on="1">Talk</button>
+      <button type="button" class="act gear" id="thinkGear" data-gear="think" data-on="0">Think</button>
+      <button type="button" class="act gear" id="deepGear" data-gear="deep" data-on="0">Deep</button>
+    </div>
+
+  <section class="sheet" id="chats" hidden>
+    <header class="sheet-head">
+      <h2 id="chatTitle">Talks</h2>
+      <button type="button" class="act primary" id="chatNew">New</button>
+      <button type="button" class="act" id="chatArchived">Archived</button>
+      <button type="button" class="act" id="homeBtn">Home</button>
+      <button type="button" class="act" id="chatClose">Close</button>
+    </header>
+    <ol class="chat-list" id="chatList"></ol>
+  </section>
+
+  <main class="cab">
+    <ol class="ribbon" id="ribbon" aria-live="polite"></ol>
+    <div class="presence" id="presence" aria-hidden="true">
+      <i class="passenger"></i>
+      <i class="fog"></i>
+    </div>
+    <p class="pipms" id="pipms" hidden></p>
+  </main>
+
+  <form class="composer" id="typeForm" hidden autocomplete="off">
+    <label class="sr" for="typeIn">Say something</label>
+    <textarea id="typeIn" rows="2" maxlength="4000" placeholder="Type it"></textarea>
+    <button type="submit" class="act primary">Send</button>
+  </form>
+
+  <footer class="armrest">
+    <button type="button" class="hold" id="hold" aria-label="Talk">
+      <span id="holdLabel">Talk</span>
+    </button>
+    <button type="button" class="act ghost" id="typeToggle">Type</button>
+  </footer>
+
+  <section class="sheet" id="installSheet" hidden>
+    <header class="sheet-head">
+      <h2>Home screen</h2>
+      <button type="button" class="act" id="installClose">Close</button>
+    </header>
+    <ol class="how">
+      <li>Stay on this page. Address must show <code>:8711</code>.</li>
+      <li>Tap the <b>⋮</b> at the top right (not Download).</li>
+      <li>Tap <b>Save and share</b> or <b>Share</b>.</li>
+      <li>Tap <b>Add to Home screen</b> or <b>Install page as app</b>.</li>
+    </ol>
+    <p class="lead">Download saves an HTML file. That is not the app.</p>
+  </section>
+  <p class="err toast" id="err" hidden></p>
+  <script src="app.js"></script>
+</body>
+</html>
