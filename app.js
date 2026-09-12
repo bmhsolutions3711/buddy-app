@@ -2,6 +2,8 @@
   const $ = (id) => document.getElementById(id);
   const TOKEN_KEY = "buddy_token";
   const ORIGIN_KEY = "buddy_origin";
+  const MIC_KEY = "buddy_mic";
+  const SINK_KEY = "buddy_sink";
   const DEFAULT_ORIGIN = "https://bryans-macbook-pro-1.tail1ed408.ts.net:8711";
   const onPages = location.hostname.endsWith("github.io");
   const PREFIX = location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "") || "";
@@ -42,7 +44,10 @@
   let turnBusy = false;
   let installPrompt = null;
   let showArchived = false;
-  let outSink = "";
+  let outSink = localStorage.getItem(SINK_KEY) || "";
+  let micStarting = false;
+  let micSrc = null;
+  let lastHoldAt = 0;
 
   function alreadyHome() {
     return window.matchMedia("(display-mode: standalone)").matches
@@ -418,40 +423,65 @@
     return types.find((t) => MediaRecorder.isTypeSupported(t)) || "";
   }
 
-  async function pokeHeadphones() {
+  function warmAudio() {
+    if (!audioCtx || audioCtx.state === "closed") {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return; }
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+  }
+  document.addEventListener("pointerdown", warmAudio, { capture: true });
+
+  function pokeHeadphones() {
     try {
       const a = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
       a.volume = 0.02;
-      await a.play();
+      if (outSink && a.setSinkId) a.setSinkId(outSink).catch(() => {});
+      a.play().catch(() => {});
     } catch (_) { /* gesture still counts */ }
   }
 
-  async function openMic() {
-    await pokeHeadphones();
+  function openMic() {
     const base = {
       echoCancellation: true,
       noiseSuppression: true,
       autoGainControl: true,
       channelCount: 1,
     };
-    let stream = await navigator.mediaDevices.getUserMedia({ audio: base });
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const btName = /bluetooth|headset|headphone|earbuds|buds|airpods|hands-?free|communication|le-audio|wh-|galaxy buds/i;
+    const prefer = localStorage.getItem(MIC_KEY) || "";
+    const audio = prefer ? { ...base, deviceId: { ideal: prefer } } : base;
+    return navigator.mediaDevices.getUserMedia({ audio });
+  }
+
+  function rememberDevices(stream) {
+    const btName = /bluetooth|headset|headphone|earbuds|buds|airpods|hands-?free|communication|le-audio|wh-|galaxy buds/i;
+    navigator.mediaDevices.enumerateDevices().then((devices) => {
       const inputs = devices.filter((d) => d.kind === "audioinput");
       const btIn = inputs.find((d) => btName.test(d.label || ""));
-      const cur = (stream.getAudioTracks()[0] && stream.getAudioTracks()[0].label) || "";
-      if (btIn && !btName.test(cur)) {
-        stream.getTracks().forEach((t) => t.stop());
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { ...base, deviceId: { exact: btIn.deviceId } },
-        });
-      }
+      const cur = stream && stream.getAudioTracks()[0];
+      const curId = cur && cur.getSettings ? cur.getSettings().deviceId : "";
+      if (btIn) localStorage.setItem(MIC_KEY, btIn.deviceId);
+      else if (curId) localStorage.setItem(MIC_KEY, curId);
       const outs = devices.filter((d) => d.kind === "audiooutput");
       const btOut = outs.find((d) => btName.test(d.label || ""));
       outSink = btOut ? btOut.deviceId : "";
-    } catch (_) { /* keep first stream */ }
-    return stream;
+      if (outSink) localStorage.setItem(SINK_KEY, outSink);
+      else localStorage.removeItem(SINK_KEY);
+    }).catch(() => {});
+  }
+
+  async function wireVad(stream) {
+    warmAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+    if (micSrc) {
+      try { micSrc.disconnect(); } catch (_) {}
+    }
+    micSrc = audioCtx.createMediaStreamSource(stream);
+    if (!analyser) {
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+    }
+    micSrc.connect(analyser);
   }
 
   function rms() {
@@ -589,45 +619,48 @@
   }
 
   async function startSession() {
-    if (sessionOn) return;
+    if (sessionOn || micStarting) return;
     if (state === "off") return showErr("talk is off");
     if (state === "dark" || state === "connect") return;
     showErr("");
+    micStarting = true;
+    $("hold").classList.add("hot");
+    setState("listening");
+    warmAudio();
+    pokeHeadphones();
     try {
       liveStream = await openMic();
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") await audioCtx.resume();
-      const src = audioCtx.createMediaStreamSource(liveStream);
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-      src.connect(analyser);
       sessionOn = true;
       firstTurn = true;
-      $("hold").classList.add("hot");
       armTurn();
+      rememberDevices(liveStream);
+      wireVad(liveStream).catch(() => {});
     } catch (err) {
       sessionOn = false;
       $("hold").classList.remove("hot");
       showErr("mic refused — allow microphone, or pick the headphones as input");
+      if (state !== "dark" && state !== "off" && state !== "connect") setState("idle");
+    } finally {
+      micStarting = false;
     }
   }
 
   function hangUp() {
     sessionOn = false;
+    micStarting = false;
     stopVad();
     if (rec && rec.state === "recording") {
       try { rec.stop(); } catch (_) {}
     }
     rec = null;
+    if (micSrc) {
+      try { micSrc.disconnect(); } catch (_) {}
+      micSrc = null;
+    }
     if (liveStream) {
       liveStream.getTracks().forEach((t) => t.stop());
       liveStream = null;
     }
-    if (audioCtx) {
-      try { audioCtx.close(); } catch (_) {}
-      audioCtx = null;
-    }
-    analyser = null;
     $("hold").classList.remove("hot");
     if (state !== "dark" && state !== "off" && state !== "connect") setState("idle");
   }
@@ -823,8 +856,12 @@
   });
 
   const hold = $("hold");
-  hold.addEventListener("click", (e) => {
-    e.preventDefault();
+  function onHold(e) {
+    if (e) e.preventDefault();
+    const now = performance.now();
+    if (now - lastHoldAt < 80) return;
+    lastHoldAt = now;
+    if (micStarting) return;
     if (!sessionOn) {
       startSession();
       return;
@@ -837,7 +874,12 @@
       return;
     }
     hangUp();
+  }
+  hold.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    onHold(e);
   });
+  hold.addEventListener("click", onHold);
 
   async function boot() {
     const offered = new URLSearchParams(location.search).get("token");
