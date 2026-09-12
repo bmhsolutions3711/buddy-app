@@ -183,6 +183,17 @@
     if (s.talk && s.talk.messages) drawRibbon(s.talk.messages);
     else drawRibbon([]);
     paintChats(s);
+    paintChips(s);
+  }
+
+  function paintChips(s) {
+    const ul = $("chips");
+    if (!ul) return;
+    const files = s.attachments || [];
+    ul.hidden = files.length === 0;
+    ul.innerHTML = files.map((f) =>
+      `<li><button type="button" data-detach="${f.id}">${esc(f.name)} ×</button></li>`
+    ).join("");
   }
 
   function esc(s) {
@@ -760,10 +771,46 @@
     } catch (e) { showErr(e.message); }
   });
 
+  $("attachBtn").addEventListener("click", () => $("attachIn").click());
+  $("attachIn").addEventListener("change", async () => {
+    const files = Array.from($("attachIn").files || []);
+    $("attachIn").value = "";
+    for (const f of files) {
+      try {
+        const data = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => {
+            const s = String(r.result || "");
+            const i = s.indexOf(",");
+            resolve(i >= 0 ? s.slice(i + 1) : s);
+          };
+          r.onerror = reject;
+          r.readAsDataURL(f);
+        });
+        paintStatus(await api("/api/talk/attach", {
+          method: "POST",
+          body: JSON.stringify({ name: f.name, mime: f.type || "", data }),
+        }));
+      } catch (err) {
+        showErr(err.message || "could not attach");
+      }
+    }
+  });
+  $("chips").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-detach]");
+    if (!b) return;
+    try {
+      paintStatus(await api("/api/talk/detach", {
+        method: "POST",
+        body: JSON.stringify({ id: Number(b.dataset.detach) }),
+      }));
+    } catch (err) { showErr(err.message); }
+  });
   $("typeForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const text = $("typeIn").value.trim();
-    if (!text) return;
+    const pending = (status && status.attachments && status.attachments.length) || 0;
+    if (!text && !pending) return;
     $("typeIn").value = "";
     try { await streamTalk(text); } catch (err) { showErr(err.message); }
   });

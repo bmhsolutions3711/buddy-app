@@ -33,7 +33,7 @@
     <div class="who">
       <span class="pip" id="pip" data-on="0"></span>
       <span class="name">Buddy</span>
-      <button type="button" class="ver" id="ver" title="Tap to pull an update">v20</button>
+      <button type="button" class="ver" id="ver" title="Tap to pull an update">v21</button>
       <span class="why" id="why">…</span>
     </div>
     <div class="rail-end">
@@ -67,10 +67,15 @@
       <i class="fog"></i>
     </div>
     <p class="pipms" id="pipms" hidden></p>
+    <ul class="chips" id="chips" hidden></ul>
   </main>
 
   <footer class="armrest">
     <div class="arm-row">
+      <button type="button" class="clip" id="attachBtn" aria-label="Attach">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.5 6.5v10a4.5 4.5 0 1 1-9 0V6.2a3.2 3.2 0 0 1 6.4 0v9.5a1.9 1.9 0 1 1-3.8 0V7.5h1.6v8.2a.3.3 0 1 0 .6 0V6.2a1.6 1.6 0 1 0-3.2 0v10.3a2.9 2.9 0 0 0 5.8 0V6.5h1.6z"/></svg>
+      </button>
+      <input id="attachIn" type="file" hidden multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.docx,application/pdf" />
       <form class="composer" id="typeForm" autocomplete="off">
         <label class="sr" for="typeIn">Say something</label>
         <input id="typeIn" type="text" maxlength="4000" placeholder="Type it" enterkeyhint="send" />
