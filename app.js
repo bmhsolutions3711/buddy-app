@@ -128,8 +128,8 @@
     why.textContent = row[0];
     pip.dataset.on = row[1];
     if (hold) hold.setAttribute("aria-label", row[2]);
-    if (status && status.mode === "counsel") document.body.dataset.mode = "counsel";
-    else document.body.dataset.mode = "talk";
+    const mode = status && status.mode;
+    document.body.dataset.mode = mode === "counsel" || mode === "gameplan" ? mode : "talk";
     if (s === "dark") watchPro();
   }
 
@@ -226,6 +226,8 @@
     else drawRibbon([]);
     paintChats(s);
     paintChips(s);
+    const mode = s.mode;
+    document.body.dataset.mode = mode === "counsel" || mode === "gameplan" ? mode : "talk";
   }
 
   function paintChips(s) {

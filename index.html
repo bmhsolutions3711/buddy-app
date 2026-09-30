@@ -33,7 +33,7 @@
     <div class="who">
       <span class="pip" id="pip" data-on="0"></span>
       <span class="name">Buddy</span>
-      <button type="button" class="ver" id="ver" title="Tap to pull an update">v29</button>
+      <button type="button" class="ver" id="ver" title="Tap to pull an update">v31</button>
       <span class="why" id="why">…</span>
       <button type="button" class="kill" id="armBtn" data-on="1">Off</button>
     </div>
@@ -44,9 +44,9 @@
     </div>
   </header>
     <div class="tools">
-      <button type="button" class="act web" id="webBtn" data-on="0">Web</button>
-      <button type="button" class="act" id="modeBtn" data-on="0">Counsel</button>
-      <button type="button" class="act plan" id="planBtn" data-on="0">Game plan</button>
+      <button type="button" class="act web" id="webBtn" data-on="0"><i class="k">Look-up</i><b>Web</b></button>
+      <button type="button" class="act" id="modeBtn" data-on="0"><i class="k">Seat</i><b>Counsel</b></button>
+      <button type="button" class="act plan" id="planBtn" data-on="0"><i class="k">Game</i><b>Plan</b></button>
     </div>
 
   <section class="sheet" id="chats" hidden>
@@ -61,13 +61,59 @@
   </section>
 
   <main class="cab">
-    <ol class="ribbon" id="ribbon" aria-live="polite"></ol>
     <div class="presence" id="presence" aria-hidden="true">
-      <i class="passenger"></i>
-      <i class="fog"></i>
+      <i class="backglow"></i>
+      <svg class="visor" viewBox="0 0 200 200">
+        <defs>
+          <clipPath id="buddyHelm">
+            <path d="M100 50c-26 0-42 22-44 46-2 26 10 46 24 54l-6 18 16 6 6-16c3 1 8 1 12 0l6 16 16-6-6-18c14-8 26-28 24-54-2-24-18-46-42-46z" />
+          </clipPath>
+        </defs>
+        <circle class="ring outer" cx="100" cy="100" r="94" />
+        <circle class="ring inner" cx="100" cy="100" r="84" />
+        <g class="ticks">
+          <line x1="100" y1="4" x2="100" y2="14" />
+          <line x1="100" y1="186" x2="100" y2="196" />
+          <line x1="4" y1="100" x2="14" y2="100" />
+          <line x1="186" y1="100" x2="196" y2="100" />
+        </g>
+        <path class="helm" d="M100 50c-26 0-42 22-44 46-2 26 10 46 24 54l-6 18 16 6 6-16c3 1 8 1 12 0l6 16 16-6-6-18c14-8 26-28 24-54-2-24-18-46-42-46z" />
+        <g class="trace" clip-path="url(#buddyHelm)">
+          <path d="M40 62h120M40 68h48M100 68h60M40 74h120M40 80h36M88 80h72" />
+          <path d="M40 86h120M40 92h28M78 92h44M132 92h28" />
+          <path d="M40 116h32M84 116h32M128 116h32M40 122h120" />
+          <path d="M40 128h56M108 128h52M40 134h120M40 140h40M92 140h68" />
+          <path d="M40 146h120M40 152h120" />
+          <path class="dim" d="M100 54v108M78 70v70M122 70v70" />
+          <rect class="sweep" x="48" y="58" width="104" height="2" fill="currentColor" />
+        </g>
+        <path class="slit" d="M64 96c12-8 60-8 72 2l-6 14c-16 6-44 6-60 0z" />
+        <g class="trace dim">
+          <path d="M46 170c20-12 36-8 54 2 18-10 34-14 54-2" />
+          <path d="M42 180h116M54 188h92M66 196h68" />
+        </g>
+        <g class="node">
+          <circle cx="88" cy="80" r="1.15" />
+          <circle cx="78" cy="92" r="1.15" />
+          <circle cx="122" cy="92" r="1.15" />
+          <circle cx="84" cy="116" r="1.1" />
+          <circle cx="128" cy="116" r="1.1" />
+          <circle cx="108" cy="128" r="1.1" />
+          <circle cx="26" cy="46" r="1.35" />
+          <circle cx="174" cy="156" r="1.35" />
+        </g>
+      </svg>
+      <p class="pipms" id="pipms" hidden></p>
     </div>
-    <p class="pipms" id="pipms" hidden></p>
-    <ul class="chips" id="chips" hidden></ul>
+    <div class="thread">
+      <header class="logbar">
+        <span class="logpip"></span>
+        <span>Talk</span>
+        <span class="logend">On this Pro</span>
+      </header>
+      <ol class="ribbon" id="ribbon" aria-live="polite"></ol>
+      <ul class="chips" id="chips" hidden></ul>
+    </div>
   </main>
 
   <footer class="armrest">
@@ -90,9 +136,9 @@
       <input id="attachIn" type="file" hidden multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.docx,application/pdf" />
     </div>
     <div class="gears">
-      <button type="button" class="act gear" id="talkGear" data-gear="talk" data-on="1">Chat</button>
-      <button type="button" class="act gear" id="thinkGear" data-gear="think" data-on="0">Think</button>
-      <button type="button" class="act gear" id="deepGear" data-gear="deep" data-on="0">Deep</button>
+      <button type="button" class="act gear" id="talkGear" data-gear="talk" data-on="1"><i class="k">Mouth</i><b>Chat</b></button>
+      <button type="button" class="act gear" id="thinkGear" data-gear="think" data-on="0"><i class="k">Push</i><b>Think</b></button>
+      <button type="button" class="act gear" id="deepGear" data-gear="deep" data-on="0"><i class="k">12b</i><b>Deep</b></button>
     </div>
   </footer>
 
@@ -102,12 +148,12 @@
       <button type="button" class="act" id="installClose">Close</button>
     </header>
     <ol class="how">
-      <li>Stay on this page. Address must show <code>:8711</code>.</li>
+      <li>Stay on this page.</li>
       <li>Tap the <b>⋮</b> at the top right (not Download).</li>
       <li>Tap <b>Save and share</b> or <b>Share</b>.</li>
       <li>Tap <b>Add to Home screen</b> or <b>Install page as app</b>.</li>
     </ol>
-    <p class="lead">Download saves an HTML file. That is not the app.</p>
+    <p class="lead">Download saves an HTML file. That is not the app. The machine hostname without a port is Mission Control, not Buddy.</p>
   </section>
   <p class="err toast" id="err" hidden></p>
   <script src="app.js"></script>
